@@ -1,0 +1,114 @@
+# pre-class
+
+
+Make sure you commit this often with meaningful messages. 
+
+
+### Getting Started
+
+
+We will work with the dataset called [gapminder](https://github.com/jennybc/gapminder), this is a cleaned up version from [Gapminder Data](http://www.gapminder.org/data/). Gapminder contains a lot of great data on all of the nations of the world. We first need to install the gapminder package in R. 
+
+```
+install.packages("gapminder")
+```
+
+
+
+```
+library(dplyr)
+library(gapminder)
+gapminder
+```
+
+
+
+### Pre-Class Problems
+
+Use **dplyr** functions to address the following questions:
+
+1. How many unique countries are represented per continent?
+Africa has 52, Americas 25, Asia 33, Europe 30, and Oceania 2 countries represented in gapminder.
+
+gapminder %>%
+  group_by(continent) %>%
+  summarize(n_countries = n_distinct(country))
+  
+2. Which European nation had the lowest GDP per capita in 1997? 
+Albania had the lowest GDP per capita in 1997 among European nations.
+
+gapminder %>%
+  filter(continent=="Europe", year=="1997") %>%
+  arrange(gdpPercap)
+  
+3. According to the data available, what was the average life expectancy across each continent in the 1980s?
+Africa had an average life expectancy of 52.5 years old, Americas 67.2 years old, Asia 63.7 years old, Europe 73.2 years old, and Oceania 74.8 years old.
+
+gapminder %>%
+  filter(year>="1980", year<"1990") %>%
+  group_by(continent) %>%
+  summarize(avg_lifeexp = mean(lifeExp))
+  
+4. What 5 countries have the highest total GDP over all years combined?
+China, Germany, Japan, United Kingdom, and United States have highest total GDP for all years combined.
+
+gdp_gapminder <- gapminder %>% 
+  group_by(country) %>%
+  mutate(totalGDP_peryr = gdpPercap*pop) %>%
+  summarize (totalGDP_combinedyrs = sum(totalGDP_peryr)) %>%
+  select(country, totalGDP_combinedyrs)
+  
+gdp_gapminder %>%
+  top_n(5, totalGDP_combinedyrs)
+          
+5. What countries and years had life expectancies of _at least_ 80 years? _N.b. only output the columns of interest: country, life expectancy and year (in that order)._
+Australia (2002, 2007), Canada (2007), France (2007), Hong Kong (1997, 2002, 2007), Iceland (2002, 2007), Israel (2007), Italy(2002, 2007), Japan (1997, 2002, 2007), New Zealand (2007), Norway (2007), Spain (2007), Sweden (2002,2007), and Switzerland (2002,2007).
+
+lifeexp_gapminder <- gapminder %>%
+  filter(lifeExp>=80) %>%
+  group_by(country, year) %>%
+  select(country, lifeExp, year)
+print(as_tibble(lifeexp_gapminder), n=22)
+
+6. What 10 countries have the strongest correlation (in either direction) between life expectancy and per capita GDP?
+France, Austria, Belgium, Norway, Oman, UK, Italy, Israel, Denmark, and Australia have the strongest correlation.
+
+gapminder %>%
+  group_by(country) %>%
+  summarize (lifeExp_cor_gdppercap = abs(cor(lifeExp, gdpPercap))) %>%
+  arrange(desc( lifeExp_cor_gdppercap))
+
+7. Which combinations of continent (besides Asia) and year have the highest average population across all countries? _N.b. your output should include all results sorted by highest average population_. With what you already know, this one may stump you. See [this Q&A](http://stackoverflow.com/q/27207963/654296) for how to `ungroup` before `arrange`ing. This also [behaves differently in more recent versions of dplyr](https://github.com/hadley/dplyr/releases/tag/v0.5.0).
+Africa (2007) and Americas (2007).
+
+gapminder %>%
+  filter(continent !="Asia") %>%
+  group_by(continent, year) %>%
+  summarize (totalcontpop = sum(pop)) %>%
+  ungroup(year) %>%
+  arrange(desc(totalcontpop))
+
+8. Which three countries have had the most consistent population estimates (i.e. lowest standard deviation) across the years of available data? 
+Iceland, Montenegro, and Sao Tome and Principe had the lowest standard deviations across years.
+
+sd_gapminder <- gapminder %>%
+  group_by(country) %>%
+  summarize(popsd_allyrs= sd(pop))
+
+sd_gapminder %>%
+  top_n(-3, popsd_allyrs)
+
+9. Subset **gm** to only include observations from 1992 and store the results as **gm1992**. What kind of object is this?
+This object is a dataframe.
+
+gm1992 <- gapminder %>%
+  filter(year==1992)
+
+10. Which observations indicate that the population of a country has *decreased* from the previous year **and** the life expectancy has *increased* from the previous year? See [the vignette on window functions](https://cran.r-project.org/web/packages/dplyr/vignettes/window-functions.html).
+
+gapminder %>%
+  group_by(country) %>%
+  mutate(pop_delta = pop-lag(pop, order_by=year),
+            lifeExp_delta = lifeExp-lag(lifeExp, order_by=year))  %>%
+  filter(pop_delta<0, lifeExp_delta>0)
+  
