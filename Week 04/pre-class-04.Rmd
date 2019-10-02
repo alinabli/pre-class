@@ -54,8 +54,12 @@ survey <- data.frame(
 The response to each question should be an integer between 1 and 5. Obviously, we have some bad values in the dataframe. The goal of this problem is to fix them.
 
 A. Using a loop, create a new dataframe called survey.clean where all the invalid values (those that are not integers between 1 and 5) are set to NA.
-survey.clean <- while (1 < survey < 5) {
-  
+
+load(tidyverse)
+survey.clean <- survey
+while(survey < 1 | survey > 5)) {
+  replace_na(survey=0) 
 }
+print(survey.clean)
 
 B. Now, again using a loop, add a new column to the dataframe called “invalid.answers” that indicates, for each participant, how many bad answers they gave.
